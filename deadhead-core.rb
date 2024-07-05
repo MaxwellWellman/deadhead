@@ -1,5 +1,5 @@
 module DeadHead_Core
-  ($imported ||= {})[:deadhead_core] = true
+  ($imported ||= {})["deadhead-core"] = true
 
   Module.class_eval do
 
