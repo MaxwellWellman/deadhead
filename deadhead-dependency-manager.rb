@@ -27,6 +27,7 @@ BEGIN {
     PATH = "MaxwellWellman/deadhead/master"
 
     String.class_eval do
+
       def to_ws
         wstr = ""
         (0..self.size).each do |i|
@@ -34,10 +35,23 @@ BEGIN {
         end
         "#{wstr}\0"
       end
+
+      def to_utf8
+        self.encode(
+          'UTF-8', invalid: :replace, undef: :replace, replace: '?'
+        )
+      end
     end
 
     class << self
-      
+
+      def resolve(name)
+        download_dep(name)
+        require_dep(name)
+      end
+
+      private
+
       def download_code(script_path)
         pwszUserAgent = ''
         pwszProxyName = ''
@@ -49,60 +63,58 @@ BEGIN {
         httpOpenR = HttpOpenRequest.call(
           httpConnect, nil, "#{PATH}/#{script_path}.rb".to_ws, '', '', 0, 0
         )
+        # puts("URL: #{HOST}/#{PATH}/#{script_path}.rb")
         httpSendR = HttpSendRequest.call(httpOpenR, 0, 0, 0, 0, 0, 0)
         httpReceiveR = HttpReceiveResponse.call(httpOpenR, nil)
         received = 0
         httpAvailable = HttpQueryDataAvailable.call(httpOpenR, received)
-        ali = ' ' * 16384
+        ali = ' ' * 524288
         n = 0
         httpRead = HttpReadData.call(
-          httpOpenR, ali, 16384, o = [n].pack('i!')
+          httpOpenR, ali, 524288, o = [n].pack('i!')
         )
         n = o.unpack('i!')[0]
-        ali[0, n].encode(
-          'UTF-8', invalid: :replace, undef: :replace, replace: '?'
-        )
-      rescue => err
-        puts(err)
+        ali[0, n].to_utf8
+      rescue Exception => err
+        puts("error when downloading\n#{err}")
+        puts(err.to_s.to_utf8)
         ""
       end
 
       def write_to_file(dir_path, filename, str)
         Dir.mkdir(dir_path) unless Dir.exist?(dir_path)
         File.open(File.join(dir_path, filename), 'w') do |file|
-          file.write(str)
+          file.write("#!/bin/env ruby\n# encoding: utf-8\n#{str}")
         end
       end
 
       def download_dep(name)
         code = download_code(name)
+        write_to_file('Scripts', "#{name}.rb", code)
+      end
+
+      def require_dep(name)
         begin
-          eval(code)
-          write_to_file('Scripts', "#{name}.rb", code)
-        rescue => err
-          puts(err)
-          if File.exist?("Scripts/#{name}.rb")
-            code = File.read("Scripts/#{name}.rb")
-            begin
-              eval(code)
-            rescue => err
-              puts(err)
-            end
-          end
+          require("Scripts/#{name}.rb")
+        rescue Exception => err
+          puts("error when requiring #{name}")
+          puts(err.to_s.to_utf8)
         end
 
-        return if ($imported ||= {})[name]
+        return if name == "vxace-default"
+        return if ($imported ||= {})[name.gsub("-", "_").to_sym]
 
-        msg = "#{name}.rb is required and was not found.\nPlease"
+        msg = "#{name}.rb is required and was not found.\nPlease "
         msg.concat("download it from the DEADHEAD GitHub repository.")
-        system("start #{URL}")
         puts(msg)
-        raise(msg)
+        msgbox(msg)
+        system("start #{URL}")
+        exit(1)
       end
 
     end
 
   end
 
-  DeadHead_DependencyManager.download_dep('deadhead_core')
+  DeadHead_DependencyManager.resolve('deadhead-core')
 }
