@@ -1,4 +1,4 @@
-($imported || {})["vxace-default"] = true;
+($imported ||= {})["vxace-default"] = true;
 module Vocab;ShopBuy = 'Buy'.freeze;ShopSell = 'Sell'.freeze;ShopCancel = 'Cancel'.freeze;
 Possession = 'Possession'.freeze;ExpTotal = 'Current Exp'.freeze;ExpNext = 'To Next %s'.freeze;
 SaveMessage = 'Save to which file?'.freeze;LoadMessage = 'Load which file?'.freeze;
