@@ -51,11 +51,6 @@ module DeadHead_Core
       instance_variable_set(name, val)
     end
 
-    def call_method_as(source, method_name, *args, &block)
-      unbound = source.instance_method(method_name)
-      unbound.bind(self)[*args, &block]
-    end
-
   end
 
   NilClass.class_eval do
@@ -73,4 +68,15 @@ module DeadHead_Core
     end
 
   end
+
+  String.class_eval do
+
+    def to_wide
+      each_byte.inject('') do | lpcwstr, byte |
+        (lpcwstr << byte) << "\0"
+      end << "\0\0"
+    end
+
+  end
+
 end
