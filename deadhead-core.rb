@@ -67,6 +67,10 @@ module DeadHead_Core
       [s, self, e].sort[1]
     end
 
+    def saturating_sub(n)
+      [0, self - n].max
+    end
+
   end
 
   String.class_eval do
