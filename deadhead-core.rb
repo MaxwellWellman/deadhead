@@ -31,12 +31,8 @@ module DeadHead_Core
 
   IO.class_eval do
 
-    patch(:p) do |super_, first, *rest|
-      super_[first.to_s, *rest]
-    end
-
     patch(:puts) do |super_, first, *rest|
-      super_[first.to_s, *rest]
+      super_[(first || "nil").to_s, *(rest.map { |a| a || "nil" })]
     end
 
   end
@@ -49,14 +45,6 @@ module DeadHead_Core
 
     def invar_set(name, val)
       instance_variable_set(name, val)
-    end
-
-  end
-
-  NilClass.class_eval do
-
-    def to_s
-      'nil'
     end
 
   end
